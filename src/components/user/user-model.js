@@ -26,6 +26,7 @@ const userSchema = new Schema({
       type: Boolean,
       default: false
     },
+    
     validation_email_token: String
   }
 }, {

@@ -22,4 +22,4 @@ app
 .use(API_V4_ROUTER.routes())
 .use(API_V4_ROUTER.allowedMethods())
 
-app.listen(process.env.PORT, () => console.log(`Server is listening on PORT: ${process.env.PORT}`))
+app.listen(process.env.PORT, () => console.log(`Server is listening on PORT: http://localhost:${process.env.PORT}`))

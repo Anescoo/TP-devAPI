@@ -2,7 +2,8 @@ import nodemailer from 'nodemailer'
 
 const MAILDEV_CONF = {
   port: 1025,
-  ignoreTLS: true
+  ignoreTLS: true,
+  host: "127.0.0.1"
 }
 
 const PROD_CONF = {
