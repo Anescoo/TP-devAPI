@@ -28,7 +28,6 @@ export async function register (ctx) {
   const registerValidationSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
-    terms_and_conditions: Joi.boolean().valid(true).required()
   })
   const params = ctx.request.body
   const { error, value } = registerValidationSchema.validate(params)
@@ -37,9 +36,6 @@ export async function register (ctx) {
   const newUser = new UserModel({
     ...value,
     password: hashedPassword,
-    settings: {
-      terms_and_conditions: value.terms_and_conditions
-    }
   })
   newUser.generateEmailVerificationToken()
   const user = await newUser.save()
@@ -75,9 +71,6 @@ export async function login (ctx) {
     if (userEmail.email == email_login && await argon2.verify(hashPassword.password, password_login)) {
       console.log("Email existe and password match !")
       ctx.body = "Email and password match"
-      const tokenValidated = is_email_validated = true
-
-
     } else {
       console.log("Error the email or password is wrong !")
       throw new Error('Error the email or password is wrong !')

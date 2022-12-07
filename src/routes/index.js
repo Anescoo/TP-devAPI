@@ -23,3 +23,4 @@ export { API_V3_ROUTER }
 const API_V4_ROUTER = new Router({prefix: '/api/v4'})
 API_V4_ROUTER.use('/users', userRoutes.routes(), userRoutes.allowedMethods())
 export { API_V4_ROUTER }
+
