@@ -26,7 +26,8 @@ const userSchema = new Schema({
       type: Boolean,
       default: false
     },
-    validation_email_token: String
+    validation_email_token: String,
+    validation_user_token: String
   }
 }, {
   timestamps: true
@@ -42,6 +43,7 @@ userSchema.method({
       issuer: process.env.APP_NAME,
       expiresIn: process.env.JWT_EXPIRES_IN
     })
+    this.settings.validation_user_token = token
     return token
   }
 })
