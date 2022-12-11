@@ -2,6 +2,7 @@ import UserModel from '#components/user/user-model.js'
 import Joi from 'joi'
 import argon2, { hash } from 'argon2'
 import { sendWelcomeEmail } from '#services/mailing/welcome-email.js'
+import { updateUser } from '#components/user/user-use-cases.js'
 import jwt from 'jsonwebtoken'
 
 export async function index (ctx) {
@@ -103,6 +104,35 @@ export async function profile (ctx) {
 
       throw new Error("Invalid")
     }
+  } catch (e) {
+    ctx.badRequest({ message: e.message })
+  }
+}
+
+export async function updateProfile (ctx) {
+  try {
+  const userValidationSchema = Joi.object({
+      email: Joi.string().email().required(),
+      password: Joi.string().min(6).required(),
+    })
+    if(!ctx.params.id) throw new Error('No id supplied')
+    const { error, value } = userValidationSchema.validate(ctx.request.body)
+    if(error) throw new Error(error)
+
+    const updatedUser = await updateUser(ctx.params.id, ctx.request.body)
+
+    ctx.ok(updatedUser)
+  } catch (e) {
+    ctx.badRequest({ message: e.message })
+  }
+}
+
+
+export async function destroy (ctx) {
+  try {
+    if(!ctx.params.id) throw new Error('No id supplied')
+    await UserModel.findByIdAndDelete(ctx.params.id)
+    ctx.ok('Ressource deleted')
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }
