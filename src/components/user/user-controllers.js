@@ -24,12 +24,13 @@ export async function id (ctx) {
   }
 }
 
-
 export async function register (ctx) {
  try {
   const registerValidationSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
+    list: Joi.string().required(),
+    task: Joi.string().required(),
   })
   const params = ctx.request.body
   const { error, value } = registerValidationSchema.validate(params)
@@ -42,7 +43,10 @@ export async function register (ctx) {
   newUser.generateEmailVerificationToken()
   const user = await newUser.save()
   await sendWelcomeEmail(user, user.settings.validation_email_token)
+  ctx.ok(newUser)
+  console.log(newUser)
  } catch(e) {
+  console.log("ERROR MY FRIEND")
   ctx.badRequest({ message: e.message })
  }
 }
@@ -76,6 +80,7 @@ export async function login (ctx) {
       ctx.body = "Email and password match"
       userEmail.generateJWT()
       const user = await userEmail.save()
+      console.log(user)
 
     } else {
       console.log("Error the email or password is wrong !")
@@ -89,23 +94,48 @@ export async function login (ctx) {
 
 export async function profile (ctx) {
   try {
-    if(error) throw new Error(error)
     
-    const userToken = await UserModel.findById(ctx.params.id)
+    const userToken = await UserModel.find({})
     const token = userToken
 
     console.log(token)
 
-    if (token) {
-      const decode = jwt.verify(token, process.env.JWT_SECRET);
-      const userEmail = await UserModel.findOne(ctx.params.email)
-      ctx.ok(userEmail)
-      console.log(decode)
-    } else {
+    // if (token) {
+    //   const decode = jwt.verify(token, process.env.JWT_SECRET);
+    //   const userEmail = await UserModel.findOne(ctx.params.email)
+    //   ctx.ok(userEmail)
+    //   console.log(decode)
+    // } else {
+    //   console.log("Error can't find profile !")
+    //   throw new Error("Invalid")
+    // }
 
-      throw new Error("Invalid")
-    }
+    const user = await UserModel.find({})
+    ctx.ok(user)
+
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }
 }
+
+export async function getAllUserTasks (ctx) {
+  try {
+    if(!ctx.params.taskId) throw new Error('No id supplied')
+    const userTAsks = await UserModel.findByTaskId(ctx.params.taskId)
+    ctx.ok(userTAsks)
+  } catch (e) {
+    ctx.badRequest({ message: e.message })
+  }
+}
+
+export async function getAllByList (ctx) {
+  try {
+    if(!ctx.params.listId) throw new Error('No id supplied')
+    const userLists = await UserModel.findByListId(ctx.params.listId)
+    ctx.ok(userLists)
+  } catch (e) {
+    ctx.badRequest({ message: e.message })
+  }
+}
+
+

@@ -1,5 +1,6 @@
 import TaskModel from '#components/task/task-model.js'
 import { updateTask } from '#components/task/task-use-cases.js'
+import UserModel from '#components/user/user-model.js'
 import Joi from 'Joi'
 
 export async function index (ctx) {
@@ -14,7 +15,8 @@ export async function index (ctx) {
 export async function id (ctx) {
   try {
     if(!ctx.params.id) throw new Error('No id supplied')
-    const task = await TaskModel.findById(ctx.params.id)
+    const task = await TaskModel.findById(ctx.params.id).lean()
+    task.users = await UserModel.findByTaskId(ctx.params.id)
     if(!task) { return ctx.notFound() }
     ctx.ok(task)
   } catch (e) {

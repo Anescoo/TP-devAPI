@@ -1,5 +1,6 @@
 import ListModel from '#components/list/list-model.js'
 import TaskModel from '#components/task/task-model.js'
+import UserModel from '#components/user/user-model.js'
 
 import Joi from 'Joi'
 
@@ -17,6 +18,7 @@ export async function id (ctx) {
     if(!ctx.params.id) throw new Error('No id supplied')
     const list = await ListModel.findById(ctx.params.id).lean()
     list.tasks = await TaskModel.findByListId(ctx.params.id)
+    list.users = await UserModel.findByListId(ctx.params.id)
     if(!list) { return ctx.notFound() }
     ctx.ok(list)
   } catch (e) {
