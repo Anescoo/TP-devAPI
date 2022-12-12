@@ -69,7 +69,7 @@ export async function update (ctx) {
     if(!updatedTask) { 
       return ctx.send(401) 
     }
-    ctx.ok(updatedTask)
+    ctx.ok("The task has been updated successfully")
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }
@@ -82,7 +82,7 @@ export async function destroy (ctx) {
     if(!taskDelete) { 
       return ctx.send(401) 
     }
-    ctx.ok('Ressource deleted')
+    ctx.ok('The task has been deleted successfully')
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }

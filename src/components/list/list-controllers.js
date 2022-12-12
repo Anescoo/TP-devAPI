@@ -58,7 +58,7 @@ export async function update (ctx) {
     if(!updatedList) { 
       return ctx.send(401) 
     }
-    ctx.ok(updatedList)
+    ctx.ok("The list has been updated successfully")
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }
@@ -71,6 +71,7 @@ export async function destroy (ctx) {
     if(!listDelete) { 
       return ctx.send(401) 
     }
+    ctx.ok("The list has been deleted successfully")
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }
