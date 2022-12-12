@@ -27,29 +27,9 @@ const userSchema = new Schema({
       default: false
     },
     validation_email_token: String,
-    validation_user_token: String
-  },
-  task: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'Task'
-  },
-  list: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'List'
   }
 }, {
   timestamps: true
-})
-
-userSchema.static({
-  findByTaskId (taskId) {
-    return this.find({ task: taskId })
-  },
-  findByListId (listId) {
-    return this.find({ list: listId })
-  }
 })
 
 userSchema.method({
@@ -62,7 +42,6 @@ userSchema.method({
       issuer: process.env.APP_NAME,
       expiresIn: process.env.JWT_EXPIRES_IN
     })
-    this.settings.validation_user_token = token
     return token
   }
 })

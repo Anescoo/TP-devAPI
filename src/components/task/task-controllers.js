@@ -15,9 +15,10 @@ export async function index (ctx) {
 export async function id (ctx) {
   try {
     if(!ctx.params.id) throw new Error('No id supplied')
-    const task = await TaskModel.findById(ctx.params.id).lean()
-    task.users = await UserModel.findByTaskId(ctx.params.id)
-    if(!task) { return ctx.notFound() }
+    const task = await TaskModel.findOneByCreatorId(ctx.state.user.id, ctx.params.id)
+    if(!task) { 
+      return ctx.send(401) 
+    }
     ctx.ok(task)
   } catch (e) {
     ctx.badRequest({ message: e.message })
@@ -37,6 +38,8 @@ export async function getAllByList (ctx) {
 
 export async function create (ctx) {
   try {
+    
+    if(!ctx.state.user.id) throw new Error('No user id found')
     const taskValidationSchema = Joi.object({
       title: Joi.string().required(),
       description: Joi.string(),
@@ -44,7 +47,7 @@ export async function create (ctx) {
     })
     const { error, value } = taskValidationSchema.validate(ctx.request.body)
     if(error) throw new Error(error)
-    const newTask = await TaskModel.create(value)
+    const newTask = await TaskModel.create({...value, creator: ctx.state.user.id})
     ctx.ok(newTask)
   } catch (e) {
     ctx.badRequest({ message: e.message })
@@ -62,9 +65,10 @@ export async function update (ctx) {
     if(!ctx.params.id) throw new Error('No id supplied')
     const { error, value } = taskValidationSchema.validate(ctx.request.body)
     if(error) throw new Error(error)
-
-    const updatedTask = await updateTask(ctx.params.id, ctx.request.body)
-
+    const updatedTask = await TaskModel.findOneByCreatorIdAndUpdate(ctx.state.user.id, ctx.params.id, value)
+    if(!updatedTask) { 
+      return ctx.send(401) 
+    }
     ctx.ok(updatedTask)
   } catch (e) {
     ctx.badRequest({ message: e.message })
@@ -74,7 +78,10 @@ export async function update (ctx) {
 export async function destroy (ctx) {
   try {
     if(!ctx.params.id) throw new Error('No id supplied')
-    await TaskModel.findByIdAndDelete(ctx.params.id)
+    const taskDelete = await TaskModel.findOneByCreatorIdAndDelete(ctx.state.user.id, ctx.params.id)
+    if(!taskDelete) { 
+      return ctx.send(401) 
+    }
     ctx.ok('Ressource deleted')
   } catch (e) {
     ctx.badRequest({ message: e.message })

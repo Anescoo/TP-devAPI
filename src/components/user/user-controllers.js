@@ -28,9 +28,7 @@ export async function register (ctx) {
  try {
   const registerValidationSchema = Joi.object({
     email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
-    list: Joi.string().required(),
-    task: Joi.string().required(),
+    password: Joi.string().min(6).required()
   })
   const params = ctx.request.body
   const { error, value } = registerValidationSchema.validate(params)
@@ -41,12 +39,12 @@ export async function register (ctx) {
     password: hashedPassword,
   })
   newUser.generateEmailVerificationToken()
+  // newUser.generateJWT() 
   const user = await newUser.save()
   await sendWelcomeEmail(user, user.settings.validation_email_token)
   ctx.ok(newUser)
   console.log(newUser)
  } catch(e) {
-  console.log("ERROR MY FRIEND")
   ctx.badRequest({ message: e.message })
  }
 }
@@ -67,18 +65,15 @@ export async function login (ctx) {
     const hashPassword = await UserModel.findOne({ email: value.email }).select('password')
     const password_login = await ctx.request.body.password
 
-    // console.log(userEmail.email)
-    // console.log(email_login)
-    // console.log(hashPassword.password)
-    // console.log(password_login)
-
-    // console.log(user)
-
     // check le email et le password si l'utilisateur si il existe
     if (userEmail.email == email_login && await argon2.verify(hashPassword.password, password_login)) {
       console.log("Email existe and password match !")
       ctx.body = "Email and password match"
-      userEmail.generateJWT()
+
+      //Generate un token pour l'utilisateur actuel
+      const tokenUser = userEmail.generateJWT()
+      ctx.ok(tokenUser)
+
       const user = await userEmail.save()
       console.log(user)
 
@@ -94,48 +89,43 @@ export async function login (ctx) {
 
 export async function profile (ctx) {
   try {
-    
-    const userToken = await UserModel.find({})
-    const token = userToken
 
-    console.log(token)
-
-    // if (token) {
-    //   const decode = jwt.verify(token, process.env.JWT_SECRET);
-    //   const userEmail = await UserModel.findOne(ctx.params.email)
-    //   ctx.ok(userEmail)
-    //   console.log(decode)
-    // } else {
-    //   console.log("Error can't find profile !")
-    //   throw new Error("Invalid")
-    // }
-
-    const user = await UserModel.find({})
-    ctx.ok(user)
+    console.log(ctx.state.user)
+    ctx.ok(ctx.state.user)
 
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }
 }
 
-export async function getAllUserTasks (ctx) {
+export async function profileUpdate (ctx) {
   try {
-    if(!ctx.params.taskId) throw new Error('No id supplied')
-    const userTAsks = await UserModel.findByTaskId(ctx.params.taskId)
-    ctx.ok(userTAsks)
+
+    // console.log(ctx.state.user.id)
+
+    const profileValidationSchema = Joi.object({
+      email: Joi.string().email().required(),
+      password: Joi.string().min(6).required()
+    })
+
+    if(!ctx.state.user.id) throw new Error('No id supplied')
+    const { error, value } = profileValidationSchema.validate(ctx.request.body)
+    if(error) throw new Error(error)
+
+    const hashedPassword = await argon2.hash(value.password)
+    const updatedUserProfile = await UserModel.findByIdAndUpdate(ctx.state.user.id, {...value, password: hashedPassword}, { runValidators: true, new: true })
+
+    console.log(hashedPassword)
+
+    //On sauvegarde dans la base de données
+    await updatedUserProfile.save()
+
+    ctx.ok(updatedUserProfile)
+    console.log("profile updated")
+
   } catch (e) {
+    console.log("not working")
     ctx.badRequest({ message: e.message })
   }
 }
-
-export async function getAllByList (ctx) {
-  try {
-    if(!ctx.params.listId) throw new Error('No id supplied')
-    const userLists = await UserModel.findByListId(ctx.params.listId)
-    ctx.ok(userLists)
-  } catch (e) {
-    ctx.badRequest({ message: e.message })
-  }
-}
-
 

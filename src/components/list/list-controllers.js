@@ -16,10 +16,10 @@ export async function index (ctx) {
 export async function id (ctx) {
   try {
     if(!ctx.params.id) throw new Error('No id supplied')
-    const list = await ListModel.findById(ctx.params.id).lean()
-    list.tasks = await TaskModel.findByListId(ctx.params.id)
-    list.users = await UserModel.findByListId(ctx.params.id)
-    if(!list) { return ctx.notFound() }
+    const list = await ListModel.findOneByCreatorId(ctx.state.user.id, ctx.params.id)
+    if(!list) { 
+      return ctx.send(401)  
+    }
     ctx.ok(list)
   } catch (e) {
     ctx.badRequest({ message: e.message })
@@ -28,13 +28,16 @@ export async function id (ctx) {
 
 export async function create (ctx) {
   try {
+    
+    if(!ctx.state.user.id) throw new Error('No user id found')
+    console.log(ctx.state.user)
     const listValidationSchema = Joi.object({
       title: Joi.string().required(),
       description: Joi.string()
     })
     const { error, value } = listValidationSchema.validate(ctx.request.body)
     if(error) throw new Error(error)
-    const newList = await ListModel.create(value)
+    const newList = await ListModel.create({...value, creator: ctx.state.user.id})
     ctx.ok(newList)
   } catch (e) {
     ctx.badRequest({ message: e.message })
@@ -51,7 +54,10 @@ export async function update (ctx) {
     if(!ctx.params.id) throw new Error('No id supplied')
     const { error, value } = listValidationSchema.validate(ctx.request.body)
     if(error) throw new Error(error)
-    const updatedList = await ListModel.findByIdAndUpdate(ctx.params.id, value, { runValidators: true, new: true })
+    const updatedList = await ListModel.findOneByCreatorIdAndUpdate(ctx.state.user.id, ctx.params.id, value)
+    if(!updatedList) { 
+      return ctx.send(401) 
+    }
     ctx.ok(updatedList)
   } catch (e) {
     ctx.badRequest({ message: e.message })
@@ -61,9 +67,10 @@ export async function update (ctx) {
 export async function destroy (ctx) {
   try {
     if(!ctx.params.id) throw new Error('No id supplied')
-    // await TaskModel.deleteMany({ list:})
-    await ListModel.findByIdAndDelete(ctx.params.id)
-    ctx.ok('Ressource deleted')
+    const listDelete = await ListModel.findOneByCreatorIdAndDelete(ctx.state.user.id, ctx.params.id)
+    if(!listDelete) { 
+      return ctx.send(401) 
+    }
   } catch (e) {
     ctx.badRequest({ message: e.message })
   }

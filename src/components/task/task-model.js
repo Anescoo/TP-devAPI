@@ -18,6 +18,11 @@ const taskSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
     ref: 'List'
+  },
+  creator: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
   }
 }, { 
   timestamps: true
@@ -26,6 +31,15 @@ const taskSchema = new Schema({
 taskSchema.static({
   findByListId (listId) {
     return this.find({ list: listId })
+  },
+  findOneByCreatorId(creatorId, taskId) {
+    return this.findOne({ creator: creatorId, _id: taskId })
+  },
+  findOneByCreatorIdAndUpdate(creatorId, taskId, updateTask) {
+    return this.findOneAndUpdate({ creator: creatorId, _id: taskId }, updateTask)
+  },
+  findOneByCreatorIdAndDelete(creatorId, taskId) {
+    return this.findOneAndDelete({ creator: creatorId, _id: taskId })
   }
 })
 
